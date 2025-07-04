@@ -1,0 +1,34 @@
+{
+  "name": "@shuffle-dev/cli",
+  "version": "1.0.0",
+  "description": "Shuffle Editor CLI tool",
+  "bin": {
+    "shuffle": "./bin/shuffle.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "shuffle",
+    "cli",
+    "editor"
+  ],
+  "author": "Shuffle Team",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "express": "^4.21.2",
+    "fs-extra": "^11.1.1",
+    "get-port": "^5.1.1",
+    "inquirer": "^8.2.5",
+    "node-fetch": "^2.7.0",
+    "open": "^8.4.2",
+    "ora": "^5.4.1",
+    "yauzl": "^2.10.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
