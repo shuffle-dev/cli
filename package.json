@@ -1,6 +1,6 @@
 {
   "name": "@shuffle-dev/cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Shuffle Editor CLI tool",
   "bin": {
     "shuffle": "./bin/shuffle.js"

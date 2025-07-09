@@ -1,15 +1,16 @@
 // Shuffle CLI Configuration
 // This file contains all API endpoints and configuration for the Shuffle CLI
 // These settings are the same for all users and should not be modified
+const SHUFFLE_DOMAIN = process.env.SHUFFLE_DOMAIN ?? 'shuffle.dev';
 
 const config = {
     // Base URLs
-    baseUrl: 'https://shuffle.dev',
-    apiBaseUrl: 'https://shuffle.dev/cli',
+    baseUrl: `https://${SHUFFLE_DOMAIN}`,
+    apiBaseUrl: `https://${SHUFFLE_DOMAIN}/cli`,
 
     // Authentication endpoints (absolute URLs)
-    authEndpoint: 'https://shuffle.dev/cli/auth',
-    tokenEndpoint: 'https://shuffle.dev/cli/auth/token',
+    authEndpoint: `https://${SHUFFLE_DOMAIN}/cli/auth`,
+    tokenEndpoint: `https://${SHUFFLE_DOMAIN}/cli/auth/token`,
 
     // API endpoints (relative to apiBaseUrl)
     userEndpoint: '/user',
