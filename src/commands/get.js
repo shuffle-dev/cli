@@ -90,18 +90,24 @@ class GetCommand {
                     const rulesContent = await api.get(`/rules/${options.rules}`);
 
                     // Create rules directory
-                    const rulesDir = path.join(finalProjectDir, `.${options.rules}`);
-                    await fs.ensureDir(rulesDir);
+                    let rulesFile = null;
+                    if (options.rules === 'cursor') {
+                        const rulesDir = path.join(finalProjectDir, `.${options.rules}`);
+                        await fs.ensureDir(rulesDir);
 
-                    // Save rules content
-                    const rulesFile = path.join(rulesDir, 'rules');
-                    await fs.writeFile(rulesFile, rulesContent, 'utf8');
+                        // Save rules content
+                        rulesFile = path.join(rulesDir, 'rules');
+                        await fs.writeFile(rulesFile, rulesContent, 'utf8');
+                    } else if (options.rules === 'windsurf') {
+                        rulesFile = path.join(finalProjectDir, '.windsurfrules');
+                        await fs.writeFile(rulesFile, rulesContent, 'utf8');
+                    }
 
                     // Only set the rules name if successful
                     successfulRulesName = options.rules;
 
                     spinner.succeed(chalk.green(`Rules "${options.rules}" downloaded successfully!`));
-                    console.log(chalk.gray(`Rules saved to: .${options.rules}/rules`));
+                    console.log(chalk.gray(`Rules saved to: .${rulesFile}`));
                 } catch (rulesError) {
                     spinner.warn(chalk.yellow(`Failed to fetch rules "${options.rules}"`));
                     if (rulesError.response?.status === 404) {
