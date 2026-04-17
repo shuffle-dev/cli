@@ -10,6 +10,7 @@ const StatusCommand = require('../src/commands/status');
 const CleanupCommand = require('../src/commands/cleanup');
 const GetCommand = require('../src/commands/get');
 const SyncCommand = require('../src/commands/sync');
+const DesignCommand = require('../src/commands/design');
 
 // Check if running via npx or globally installed
 const isRunningViaNpx = process.argv[1] && process.argv[1].includes('/_npx/');
@@ -76,6 +77,8 @@ program
     .description('Sync project with local files (interactive selection if no projectId provided)')
     .option('-d, --directory <directory>', 'Project directory (overrides destination param)')
     .action(SyncCommand.execute);
+
+DesignCommand.register(program);
 
 program.action(() => {
     console.log('');

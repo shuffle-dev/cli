@@ -91,6 +91,53 @@ npx @shuffle-dev/cli sync PROJECT_ID
 npx @shuffle-dev/cli sync
 ```
 
+### Design & Redesign
+
+**List available Design models:**
+
+```bash
+npx @shuffle-dev/cli design models
+```
+
+**Create a Design session:**
+
+```bash
+npx @shuffle-dev/cli design create "Landing page for a B2B support automation platform"
+```
+
+By default, this creates a session, shows the available models, and preselects all of them.
+
+**Create a Design session and generate with all models without the model picker:**
+
+```bash
+npx @shuffle-dev/cli design create "Landing page for a B2B support automation platform" --all
+```
+
+**Create a Redesign session:**
+
+```bash
+npx @shuffle-dev/cli redesign create https://example.com "Keep the content, make it modern"
+```
+
+**Create a session and generate with a specific model:**
+
+```bash
+npx @shuffle-dev/cli design create "Landing page for a B2B support automation platform" --model claude-opus-4-6
+```
+
+**List and inspect sessions:**
+
+```bash
+npx @shuffle-dev/cli design sessions
+npx @shuffle-dev/cli design show SESSION_HASH
+```
+
+**Generate or refresh a project screenshot:**
+
+```bash
+npx @shuffle-dev/cli design screenshot PROJECT_SESSION_ID
+```
+
 ### Project Status & Maintenance
 
 **Check current directory project status:**
@@ -120,6 +167,29 @@ npx @shuffle-dev/cli cleanup
 - Use `npx @shuffle-dev/cli list` to see what projects you have downloaded locally
 - Use `npx @shuffle-dev/cli status` to check if you're in a Shuffle project directory
 - Use `npx @shuffle-dev/cli cleanup` to remove references to deleted project folders
+
+## Local Development Backend
+
+By default, the CLI uses `https://shuffle.dev`. To test against a local backend:
+
+```bash
+SHUFFLE_BASE_URL=https://shuffle.test npx @shuffle-dev/cli design models
+```
+
+To avoid overwriting your production CLI token while testing locally, use a separate `HOME`:
+
+```bash
+HOME=/tmp/shuffle-cli-local SHUFFLE_BASE_URL=https://shuffle.test npx @shuffle-dev/cli auth
+HOME=/tmp/shuffle-cli-local SHUFFLE_BASE_URL=https://shuffle.test npx @shuffle-dev/cli design models
+```
+
+Advanced overrides are also available:
+
+```bash
+SHUFFLE_API_BASE_URL=https://shuffle.test/cli
+SHUFFLE_AUTH_URL=https://shuffle.test/cli/auth
+SHUFFLE_TOKEN_URL=https://shuffle.test/cli/auth/token
+```
 
 ## 💻 Requirements
 

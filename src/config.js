@@ -75,19 +75,43 @@ class Config {
     }
 
     getApiBaseUrl() {
+        if (process.env.SHUFFLE_API_BASE_URL) {
+            return this.normalizeBaseUrl(process.env.SHUFFLE_API_BASE_URL);
+        }
+
+        if (process.env.SHUFFLE_BASE_URL) {
+            return `${this.normalizeBaseUrl(process.env.SHUFFLE_BASE_URL)}/cli`;
+        }
+
         return endpoints.apiBaseUrl;
     }
 
     getAuthUrl() {
+        if (process.env.SHUFFLE_AUTH_URL) {
+            return this.normalizeBaseUrl(process.env.SHUFFLE_AUTH_URL);
+        }
+
+        if (process.env.SHUFFLE_BASE_URL) {
+            return `${this.normalizeBaseUrl(process.env.SHUFFLE_BASE_URL)}/cli/auth`;
+        }
+
         return endpoints.authEndpoint;
     }
 
     getTokenUrl() {
+        if (process.env.SHUFFLE_TOKEN_URL) {
+            return this.normalizeBaseUrl(process.env.SHUFFLE_TOKEN_URL);
+        }
+
+        if (process.env.SHUFFLE_BASE_URL) {
+            return `${this.normalizeBaseUrl(process.env.SHUFFLE_BASE_URL)}/cli/auth/token`;
+        }
+
         return endpoints.tokenEndpoint;
     }
 
     getUserEndpoint() {
-        return endpoints.apiBaseUrl + endpoints.userEndpoint;
+        return this.getApiBaseUrl() + endpoints.userEndpoint;
     }
 
     getProjectsEndpoint() {
@@ -109,6 +133,15 @@ class Config {
     setApiBaseUrl(url) {
         console.warn('API base URL is configured in endpoints.js and cannot be changed at runtime');
         return false;
+    }
+
+    normalizeBaseUrl(url) {
+        const trimmedUrl = String(url).trim().replace(/\/+$/, '');
+        if (!/^https?:\/\//i.test(trimmedUrl)) {
+            return `http://${trimmedUrl}`;
+        }
+
+        return trimmedUrl;
     }
 
     getProjects() {
