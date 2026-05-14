@@ -27,7 +27,6 @@ class DesignCommand {
             .option('--all', 'Run all active design models without selecting them interactively')
             .option('--download [directory]', 'Download generated project files after each successful run')
             .option('--source-only', 'When used with --download, extract only source files')
-            .option('--rules <rulesName>', 'When used with --download, fetch AI rules')
             .action((prompt, options) => DesignCommand.create('design', { prompt }, options));
 
         design
@@ -58,7 +57,6 @@ class DesignCommand {
             .option('--all', 'Run all active redesign-capable models without selecting them interactively')
             .option('--download [directory]', 'Download generated project files after each successful run')
             .option('--source-only', 'When used with --download, extract only source files')
-            .option('--rules <rulesName>', 'When used with --download, fetch AI rules')
             .action((url, prompt, options) => DesignCommand.create('redesign', { prompt, url }, options));
 
     }
@@ -286,7 +284,7 @@ class DesignCommand {
             await GetCommand.execute(projectId, destination, {
                 output: undefined,
                 sourceOnly: options.sourceOnly || false,
-                rules: options.rules || null,
+                rules: null,
             });
         }
     }
@@ -614,17 +612,11 @@ class DesignCommand {
     }
 
     static printProjectUrls(project) {
-        if (project.preview_url) {
-            console.log(`  ${chalk.gray('Preview:')} ${project.preview_url}`);
-        }
-        if (project.download_url) {
-            console.log(`  ${chalk.gray('Download:')} ${project.download_url}`);
-        }
-        if (project.screenshot_url) {
-            console.log(`  ${chalk.gray('Screenshot:')} ${project.screenshot_url}`);
-        }
         if (project.edit_url) {
             console.log(`  ${chalk.gray('Edit:')} ${project.edit_url}`);
+        }
+        if (project.preview_url) {
+            console.log(`  ${chalk.gray('Preview:')} ${project.preview_url}`);
         }
     }
 
