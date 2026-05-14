@@ -590,10 +590,7 @@ class DesignCommand {
             console.log();
             console.log(`${chalk.cyan(project.sessionId || project.id || project.project || 'unknown project')} ${chalk.gray(project.model || '')}`);
             if (project.model_label) {
-                console.log(`  ${chalk.gray('Model label:')} ${project.model_label}`);
-            }
-            if (project.rerunnable !== undefined) {
-                console.log(`  ${chalk.gray('Rerunnable:')} ${project.rerunnable ? 'yes' : 'no'}`);
+                console.log(`  ${chalk.gray('Model used:')} ${project.model_label}`);
             }
             DesignCommand.printProjectUrls(project);
         });
