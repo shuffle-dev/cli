@@ -1,8 +1,8 @@
 # Shuffle CLI
 
-Command-line tool for working with Shuffle projects, Design sessions, and Redesign sessions from your terminal.
+Command-line tool for working with [Shuffle Editor](https://shuffle.dev) projects, design sessions, and redesign sessions from your terminal.
 
-Use it to sign in to Shuffle, list and download projects, sync project files, generate new designs, redesign existing pages, and save generated project links for later use.
+Use it to sign in to Shuffle, list and download projects, sync project files, generate new designs, redesign existing pages, and save generated projects for later use.
 
 ## Requirements
 
@@ -94,6 +94,7 @@ npx @shuffle-dev/cli cleanup
 ```
 
 ## Design
+This command creates new projects based on a text description using top generative AI models. You can choose from available models, generate screenshots, and download generated files. The online version of this feature is available at [AI Design Arena](https://shuffle.dev/ai-design).
 
 List available Design models:
 
@@ -125,7 +126,7 @@ Generate screenshots for created projects:
 npx @shuffle-dev/cli design create "Landing page for a B2B support automation platform" --screenshot
 ```
 
-Save the generated edit, preview, and screenshot URLs to a file:
+Save the generated edit, preview, and screenshot URLs to a file for later use with AI agents or manual review:
 
 ```bash
 npx @shuffle-dev/cli design create "Landing page for a B2B support automation platform" --screenshot --save-output ./shuffle-output.txt
@@ -157,6 +158,7 @@ npx @shuffle-dev/cli design screenshot PROJECT_SESSION_ID
 ```
 
 ## Redesign
+This command redesigns an existing web page based on a text description using top generative AI models. You can choose from available models, generate screenshots of new projects, and download generated files. The online version of this feature is available at [AI Website Redesign](https://shuffle.dev/ai-website-redesign).
 
 Create a Redesign session from an existing URL:
 
