@@ -27,6 +27,7 @@ class DesignCommand {
             .option('--all', 'Run all active design models without selecting them interactively')
             .option('--download [directory]', 'Download generated project files after each successful run')
             .option('--source-only', 'When used with --download, extract only source files')
+            .option('--screenshot', 'Generate a screenshot for each project after it is created')
             .action((prompt, options) => DesignCommand.create('design', { prompt }, options));
 
         design
@@ -57,6 +58,7 @@ class DesignCommand {
             .option('--all', 'Run all active redesign-capable models without selecting them interactively')
             .option('--download [directory]', 'Download generated project files after each successful run')
             .option('--source-only', 'When used with --download, extract only source files')
+            .option('--screenshot', 'Generate a screenshot for each project after it is created')
             .action((url, prompt, options) => DesignCommand.create('redesign', { prompt, url }, options));
 
     }
@@ -253,6 +255,10 @@ class DesignCommand {
 
         if (options.download && successfulProjects.length) {
             await DesignCommand.downloadProjects(successfulProjects, options);
+        }
+
+        if (options.screenshot && successfulProjects.length) {
+            await Promise.all(successfulProjects.map((item) => DesignCommand.screenshot(item.project.id)));
         }
 
         if (failedModels.length > 0 && successfulProjects.length === 0) {
