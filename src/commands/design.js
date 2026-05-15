@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs-extra');
 const chalk = require('chalk');
 const ora = require('ora');
 const inquirer = require('inquirer');
@@ -28,6 +29,7 @@ class DesignCommand {
             .option('--download [directory]', 'Download generated project files after each successful run')
             .option('--source-only', 'When used with --download, extract only source files')
             .option('--screenshot', 'Generate a screenshot for each project after it is created')
+            .option('--save-output <file>', 'Save the output with all the URLs to a file')
             .action((prompt, options) => DesignCommand.create('design', { prompt }, options));
 
         design
@@ -59,8 +61,8 @@ class DesignCommand {
             .option('--download [directory]', 'Download generated project files after each successful run')
             .option('--source-only', 'When used with --download, extract only source files')
             .option('--screenshot', 'Generate a screenshot for each project after it is created')
+            .option('--save-output <file>', 'Save the output with all the URLs to a file')
             .action((url, prompt, options) => DesignCommand.create('redesign', { prompt, url }, options));
-
     }
 
     static async models() {
@@ -117,7 +119,9 @@ class DesignCommand {
             spinner.succeed(chalk.green('Session created'));
             DesignCommand.printSessionSummary(session);
 
-            await DesignCommand.runModelsForSession(mode, session.hash, options);
+            const output = options.saveOutput ? DesignCommand.createOutput(session) : null;
+
+            await DesignCommand.runModelsForSession(mode, session.hash, options, output);
         } catch (error) {
             spinner.fail(chalk.red('Failed to create session'));
             DesignCommand.exitWithApiError(error);
@@ -192,25 +196,22 @@ class DesignCommand {
         const spinner = ora('Generating screenshot...').start();
 
         try {
-            const response = await api.post(
-                endpoints.aiDesignScreenshotEndpoint.replace('{sessionId}', encodeURIComponent(projectSessionId)),
-                {},
-                { timeout: RUN_TIMEOUT_MS, silentErrors: true },
-            );
+            const response = await DesignCommand.generateScreenshot(projectSessionId);
             spinner.succeed(chalk.green('Screenshot ready'));
-            console.log();
-            console.log(`${chalk.gray('Project:')} ${response.project || projectSessionId}`);
-            console.log(`${chalk.gray('Screenshot URL:')} ${response.screenshot_url || 'not returned'}`);
+            DesignCommand.printScreenshotResult(response, projectSessionId);
         } catch (error) {
             spinner.fail(chalk.red('Failed to generate screenshot'));
             DesignCommand.exitWithApiError(error);
         }
     }
 
-    static async runModelsForSession(mode, hash, options) {
+    static async runModelsForSession(mode, hash, options, output = null) {
         const models = await DesignCommand.resolveModels(mode, options);
         if (!models.length) {
             console.log(chalk.yellow('No models selected.'));
+            if (output) {
+                await DesignCommand.saveOutputFile(output, options.saveOutput);
+            }
             return;
         }
 
@@ -229,7 +230,11 @@ class DesignCommand {
             const model = models[index];
             if (result.status === 'fulfilled') {
                 const project = result.value.project;
-                successfulProjects.push({ model, project });
+                const item = { model, project };
+                if (output) {
+                    item.outputEntry = DesignCommand.addProjectToOutput(output, model, project);
+                }
+                successfulProjects.push(item);
             } else {
                 failedModels.push({ model, error: result.reason });
             }
@@ -258,7 +263,11 @@ class DesignCommand {
         }
 
         if (options.screenshot && successfulProjects.length) {
-            await Promise.all(successfulProjects.map((item) => DesignCommand.screenshot(item.project.id)));
+            await DesignCommand.generateScreenshotsForProjects(successfulProjects);
+        }
+
+        if (output) {
+            await DesignCommand.saveOutputFile(output, options.saveOutput);
         }
 
         if (failedModels.length > 0 && successfulProjects.length === 0) {
@@ -272,6 +281,118 @@ class DesignCommand {
             { model: model.id },
             { timeout: RUN_TIMEOUT_MS, silentErrors: true },
         );
+    }
+
+    static async generateScreenshot(projectSessionId) {
+        return api.post(
+            endpoints.aiDesignScreenshotEndpoint.replace('{sessionId}', encodeURIComponent(projectSessionId)),
+            {},
+            { timeout: RUN_TIMEOUT_MS, silentErrors: true },
+        );
+    }
+
+    static async generateScreenshotsForProjects(projects) {
+        console.log();
+        console.log(chalk.blue('Generating screenshots...'));
+
+        const spinner = ora(`Generating ${projects.length} screenshot${projects.length > 1 ? 's' : ''}...`).start();
+
+        const results = await Promise.allSettled(
+            projects.map((item) => DesignCommand.generateScreenshot(item.project.id)),
+        );
+
+        const successfulScreenshots = [];
+        const failedScreenshots = [];
+
+        results.forEach((result, index) => {
+            const item = projects[index];
+            if (result.status === 'fulfilled') {
+                item.screenshotResult = result.value;
+                successfulScreenshots.push({ item, response: result.value });
+                return;
+            }
+
+            failedScreenshots.push({ item, error: result.reason });
+        });
+
+        if (failedScreenshots.length && successfulScreenshots.length) {
+            spinner.warn(chalk.yellow(`Generated ${successfulScreenshots.length} screenshot${successfulScreenshots.length > 1 ? 's' : ''}; ${failedScreenshots.length} failed.`));
+        } else if (failedScreenshots.length) {
+            spinner.fail(chalk.red('Failed to generate screenshots.'));
+        } else {
+            spinner.succeed(chalk.green(`Generated ${successfulScreenshots.length} screenshot${successfulScreenshots.length > 1 ? 's' : ''}.`));
+        }
+
+        successfulScreenshots.forEach(({ item, response }) => {
+            if (item.outputEntry && response.screenshot_url) {
+                item.outputEntry.screenshotUrl = response.screenshot_url;
+            }
+            DesignCommand.printScreenshotResult(response, item.project.id);
+        });
+
+        failedScreenshots.forEach(({ item, error }) => {
+            console.log();
+            console.log(chalk.red(`Screenshot failed: ${item.project.id}`));
+            DesignCommand.printApiError(error);
+        });
+    }
+
+    static printScreenshotResult(response, projectSessionId) {
+        console.log();
+        console.log(`${chalk.gray('Project:')} ${response.project || projectSessionId}`);
+        console.log(`${chalk.gray('Screenshot URL:')} ${response.screenshot_url || 'not returned'}`);
+    }
+
+    static createOutput(session) {
+        return {
+            session: session.hash,
+            projects: [],
+        };
+    }
+
+    static addProjectToOutput(output, model, project) {
+        const entry = {
+            modelName: project.model_label || model.label || project.model || model.id,
+            editUrl: project.edit_url || null,
+            previewUrl: project.preview_url || null,
+            screenshotUrl: null,
+        };
+
+        output.projects.push(entry);
+
+        return entry;
+    }
+
+    static async saveOutputFile(output, file) {
+        const outputPath = path.resolve(file);
+        await fs.ensureDir(path.dirname(outputPath));
+        await fs.writeFile(outputPath, DesignCommand.formatOutputFile(output), 'utf8');
+
+        console.log();
+        console.log(`${chalk.green('Output saved:')} ${chalk.cyan(outputPath)}`);
+    }
+
+    static formatOutputFile(output) {
+        const lines = [
+            `Session: ${output.session || 'unknown'}`,
+            '',
+        ];
+
+        output.projects.forEach((entry) => {
+            lines.push(`Model: ${entry.modelName || 'unknown'}`);
+            if (entry.editUrl) {
+                lines.push(`  Edit: ${entry.editUrl}`);
+            }
+            if (entry.previewUrl) {
+                lines.push(`  Preview: ${entry.previewUrl}`);
+            }
+            if (entry.screenshotUrl) {
+                lines.push(`  Screenshot URL: ${entry.screenshotUrl}`);
+            }
+            lines.push('');
+        });
+
+        return `${lines.join('\n').trimEnd()}\n`;
     }
 
     static async downloadProjects(projects, options) {
