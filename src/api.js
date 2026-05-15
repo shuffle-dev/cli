@@ -34,10 +34,6 @@ class ApiClient {
             this.client.interceptors.response.use(
                 (response) => response,
                 (error) => {
-                    if (error.response?.status === 401) {
-                        console.error('Authentication failed. Please run "shuffle auth" to re-authenticate.');
-                        process.exit(1);
-                    }
                     return Promise.reject(error);
                 }
             );
@@ -50,7 +46,9 @@ class ApiClient {
             const response = await this.client.get(endpoint, options);
             return response.data;
         } catch (error) {
-            this.handleError(error);
+            if (!options.silentErrors) {
+                this.handleError(error);
+            }
             throw error;
         }
     }
@@ -61,7 +59,9 @@ class ApiClient {
             const response = await this.client.post(endpoint, data, options);
             return response.data;
         } catch (error) {
-            this.handleError(error);
+            if (!options.silentErrors) {
+                this.handleError(error);
+            }
             throw error;
         }
     }
@@ -75,14 +75,18 @@ class ApiClient {
             });
             return response;
         } catch (error) {
-            this.handleError(error);
+            if (!options.silentErrors) {
+                this.handleError(error);
+            }
             throw error;
         }
     }
 
     handleError(error) {
         if (error.response) {
-            console.error(`API Error: ${error.response.status} - ${error.response.data?.message || error.response.statusText}`);
+            const responseData = error.response.data;
+            const message = responseData?.error || responseData?.message || error.response.statusText;
+            console.error(`API Error: ${error.response.status} - ${message}`);
         } else if (error.request) {
             console.error('Network Error: Unable to reach the server');
         } else {

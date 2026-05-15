@@ -16,6 +16,11 @@ const config = {
     userEndpoint: '/user',
     projectsEndpoint: '/projects',
     downloadEndpoint: '/projects/{id}/download',
+    aiDesignModelsEndpoint: '/ai-design/models',
+    aiDesignSessionsEndpoint: '/ai-design/sessions',
+    aiDesignSessionEndpoint: '/ai-design/sessions/{hash}',
+    aiDesignRunsEndpoint: '/ai-design/sessions/{hash}/runs',
+    aiDesignScreenshotEndpoint: '/ai-design/projects/{sessionId}/screenshot',
 
     // Local server configuration for auth callback
     callbackPorts: [8080, 8081, 8082, 8083, 8084, 8085],

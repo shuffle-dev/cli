@@ -143,9 +143,6 @@ class GetCommand {
             console.log(chalk.gray(`Project registered for future sync operations`));
             console.log();
 
-            // Calculate relative path for cd command
-            const relativePath = path.relative(process.cwd(), finalProjectDir);
-
             console.log(chalk.gray('To sync changes from Shuffle:'));
             console.log(chalk.gray(`  shuffle sync ${projectId}`));
 
