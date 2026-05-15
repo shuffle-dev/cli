@@ -370,7 +370,7 @@ class DesignCommand {
                 choices: allowedModels.map((model) => ({
                     name: `${model.label || model.id} (${model.id})`,
                     value: model.id,
-                    checked: true,
+                    checked: false,
                 })),
                 validate: (value) => {
                     if (!value.length) {
