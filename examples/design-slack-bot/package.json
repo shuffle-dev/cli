@@ -1,0 +1,21 @@
+{
+  "name": "shuffle-design-slackbot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple Slack bot that creates Shuffle designs from app mentions.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:background": "node scripts/bot-background.js start",
+    "stop:background": "node scripts/bot-background.js stop",
+    "restart:background": "node scripts/bot-background.js restart",
+    "status:background": "node scripts/bot-background.js status"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.21.2",
+    "dotenv": "^16.4.7"
+  }
+}

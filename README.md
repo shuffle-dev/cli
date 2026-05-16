@@ -4,13 +4,11 @@ Command-line tool for working with [Shuffle Editor](https://shuffle.dev) project
 
 Use it to sign in to Shuffle, list and download projects, sync project files, generate new designs, redesign existing pages, and save generated projects for later use.
 
-## Requirements
+## Quick demo
 
-- Node.js 14.0.0 or higher
-- A Shuffle account
-- A web browser for sign-in
+[`examples/design-slack-bot`](./examples/design-slack-bot) contains a Slack bot that uses this CLI to create designs from Slack mentions or direct messages. See the example README for Slack app setup instructions.
 
-## Usage
+## Usage of the Shuffle CLI
 
 Run the CLI with `npx`:
 
