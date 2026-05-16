@@ -283,11 +283,72 @@ class DesignCommand {
     }
 
     static async runSingleModel(hash, model) {
-        return api.post(
+        const response = await api.postStream(
             DesignCommand.endpointWithHash(endpoints.aiDesignRunsEndpoint, hash),
             { model: model.id },
             { timeout: RUN_TIMEOUT_MS, silentErrors: true },
         );
+
+        return DesignCommand.parseRunStream(response);
+    }
+
+    static parseRunStream(response) {
+        return new Promise((resolve, reject) => {
+            let buffer = '';
+            let finalPayload = null;
+
+            response.data.setEncoding('utf8');
+
+            response.data.on('data', (chunk) => {
+                buffer += chunk;
+                const lines = buffer.split(/\r?\n/);
+                buffer = lines.pop() || '';
+
+                lines.forEach((line) => {
+                    const payload = DesignCommand.parseRunStreamLine(line);
+                    if (payload && typeof payload === 'object') {
+                        finalPayload = payload;
+                    }
+                });
+            });
+
+            response.data.on('end', () => {
+                const payload = DesignCommand.parseRunStreamLine(buffer);
+                if (payload && typeof payload === 'object') {
+                    finalPayload = payload;
+                }
+
+                if (!finalPayload) {
+                    reject(new Error('Design run finished without a final response.'));
+                    return;
+                }
+
+                if (finalPayload.status === false) {
+                    const error = new Error(finalPayload.error || 'Design run failed.');
+                    error.response = { data: finalPayload };
+                    reject(error);
+                    return;
+                }
+
+                resolve(finalPayload);
+            });
+
+            response.data.on('error', reject);
+        });
+    }
+
+    static parseRunStreamLine(line) {
+        const trimmed = String(line || '').trim();
+        if (!trimmed) {
+            return null;
+        }
+
+        try {
+            const payload = JSON.parse(trimmed);
+            return payload === 1 ? null : payload;
+        } catch (error) {
+            return null;
+        }
     }
 
     static delay(ms) {

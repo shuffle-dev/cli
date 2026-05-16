@@ -66,6 +66,24 @@ class ApiClient {
         }
     }
 
+    async postStream(endpoint, data = {}, options = {}) {
+        this.initialize();
+        try {
+            return await this.client.post(endpoint, data, {
+                ...options,
+                responseType: 'stream',
+            });
+        } catch (error) {
+            if (error.response?.data?.on) {
+                error.response.data = await this.readStream(error.response.data);
+            }
+            if (!options.silentErrors) {
+                this.handleError(error);
+            }
+            throw error;
+        }
+    }
+
     async getStream(endpoint, options = {}) {
         this.initialize();
         try {
@@ -80,6 +98,22 @@ class ApiClient {
             }
             throw error;
         }
+    }
+
+    readStream(stream) {
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+            stream.on('end', () => {
+                const content = Buffer.concat(chunks).toString('utf8');
+                try {
+                    resolve(JSON.parse(content));
+                } catch (error) {
+                    resolve(content);
+                }
+            });
+            stream.on('error', reject);
+        });
     }
 
     handleError(error) {
