@@ -9,6 +9,7 @@ const endpoints = require('../config/endpoints');
 const GetCommand = require('./get');
 
 const RUN_TIMEOUT_MS = 10 * 60 * 1000;
+const RUN_MODEL_DELAY_MS = 100;
 
 class DesignCommand {
     static register(program) {
@@ -221,7 +222,13 @@ class DesignCommand {
         const spinner = ora(`Generating ${models.length} project${models.length > 1 ? 's' : ''}...`).start();
 
         const results = await Promise.allSettled(
-            models.map((model) => DesignCommand.runSingleModel(hash, model)),
+            models.map(async (model, index) => {
+                if (index > 0) {
+                    await DesignCommand.delay(index * RUN_MODEL_DELAY_MS);
+                }
+
+                return DesignCommand.runSingleModel(hash, model);
+            }),
         );
 
         const successfulProjects = [];
@@ -281,6 +288,10 @@ class DesignCommand {
             { model: model.id },
             { timeout: RUN_TIMEOUT_MS, silentErrors: true },
         );
+    }
+
+    static delay(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     static async generateScreenshot(projectSessionId) {
