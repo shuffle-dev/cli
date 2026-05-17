@@ -26,6 +26,12 @@ Create `.env`:
 cp .env.example .env
 ```
 
+Create your local prospects file:
+
+```bash
+cp prospects.json.example prospects.json
+```
+
 Set either:
 
 ```env
@@ -54,7 +60,7 @@ Customize the generated outreach before running the automation:
 
 ## Prospects
 
-`prospects.json` contains an array of prospect objects:
+`prospects.json` contains an array of prospect objects. It is ignored by git so prospect data and send status stay local. Start from `prospects.json.example`:
 
 ```json
 [
