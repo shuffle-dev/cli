@@ -20,6 +20,9 @@ const app = new App({
   logLevel: resolveSlackLogLevel(process.env.SLACK_LOG_LEVEL),
 });
 
+const generationQueue = [];
+let isGenerationRunning = false;
+
 app.event('app_mention', async ({ event, client, logger }) => {
   await handleDesignRequest({ event, client, logger });
 });
@@ -64,12 +67,48 @@ async function handleDesignRequest({ event, client, logger }) {
     return;
   }
 
+  const isQueued = isGenerationRunning || generationQueue.length > 0;
+  generationQueue.push({ event, client, logger, prompt, designRequest });
+
+  if (isQueued) {
+    await client.chat.postMessage({
+      channel: event.channel,
+      text: `${formatUserMention(event)} added your design to the queue 👌 I’ll start working on it as soon as I finish the current one.`,
+    });
+  }
+
+  processGenerationQueue().catch((error) => logger.error(error));
+}
+
+async function processGenerationQueue() {
+  if (isGenerationRunning) {
+    return;
+  }
+
+  isGenerationRunning = true;
+
+  try {
+    while (generationQueue.length > 0) {
+      const job = generationQueue.shift();
+      try {
+        await runDesignGenerationJob(job);
+      } catch (error) {
+        job.logger.error(error);
+        await sendGenerationFailureMessage(job, error);
+      }
+    }
+  } finally {
+    isGenerationRunning = false;
+  }
+}
+
+async function runDesignGenerationJob({ event, client, logger, prompt, designRequest }) {
   await client.chat.postMessage({
     channel: event.channel,
-    text: formatCreationFallbackText(designRequest),
+    text: `${formatUserMention(event)}, ${formatCreationFallbackText(designRequest)}`,
     unfurl_links: false,
     unfurl_media: false,
-    blocks: buildCreationMessageBlocks(designRequest),
+    blocks: buildCreationMessageBlocks(designRequest, event),
   });
 
   try {
@@ -97,6 +136,17 @@ async function handleDesignRequest({ event, client, logger }) {
       channel: event.channel,
       text: `Shuffle design failed: ${error.message}`,
     });
+  }
+}
+
+async function sendGenerationFailureMessage({ event, client }, error) {
+  try {
+    await client.chat.postMessage({
+      channel: event.channel,
+      text: `Shuffle design failed: ${error.message}`,
+    });
+  } catch {
+    // Avoid blocking the queue if Slack rejects the failure notification.
   }
 }
 
@@ -128,11 +178,11 @@ function parseDesignRequest(prompt) {
 
 function formatCreationFallbackText(designRequest) {
   return designRequest.mode === 'redesign'
-    ? 'On it! Creating a redesign for you.'
-    : 'On it! Creating a design for you.';
+    ? 'on it! Creating a redesign for you.'
+    : 'on it! Creating a design for you.';
 }
 
-function buildCreationMessageBlocks(designRequest) {
+function buildCreationMessageBlocks(designRequest, event) {
   const isRedesign = designRequest.mode === 'redesign';
   const fields = [];
 
@@ -144,8 +194,8 @@ function buildCreationMessageBlocks(designRequest) {
   }
 
   fields.push({
-      type: 'mrkdwn',
-      text: '*Est. time:*\n3 minutes',
+    type: 'mrkdwn',
+    text: '*Est. time:*\n3 minutes',
   });
 
   return [
@@ -153,7 +203,7 @@ function buildCreationMessageBlocks(designRequest) {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `\n${formatCreationFallbackText(designRequest)}`,
+        text: `${formatUserMention(event)}, ${formatCreationFallbackText(designRequest)}`,
       },
     },
     {
@@ -176,12 +226,13 @@ async function sendFormattedDesignResult({ event, client, prompt, result }) {
 
   const designId = resolveDesignId(result.parsed);
   const [firstProject, ...threadProjects] = projects;
+  const readyText = `${formatUserMention(event)}, your design is ready! Here are the details:`;
   const response = await client.chat.postMessage({
     channel: event.channel,
-    text: 'Your design is ready! Here are the details:',
+    text: readyText,
     unfurl_links: false,
     unfurl_media: false,
-    blocks: buildDesignResultBlocks({ prompt, designId, projects, project: firstProject }),
+    blocks: buildDesignResultBlocks({ prompt, designId, projects, project: firstProject, readyText }),
   });
 
   for (const [index, project] of threadProjects.entries()) {
@@ -196,15 +247,14 @@ async function sendFormattedDesignResult({ event, client, prompt, result }) {
   }
 }
 
-function buildDesignResultBlocks({ prompt, designId, projects, project, screenshotUrl }) {
+function buildDesignResultBlocks({ prompt, designId, projects, project, screenshotUrl, readyText }) {
   const imageUrl = screenshotUrl || project.screenshotUrl;
   const blocks = [
     {
-      type: 'header',
+      type: 'section',
       text: {
-        type: 'plain_text',
-        text: 'Your design is ready! Here are the details:',
-        emoji: true,
+        type: 'mrkdwn',
+        text: readyText || 'Your design is ready! Here are the details:',
       },
     },
     {
@@ -340,6 +390,10 @@ function escapeSlackText(value) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+function formatUserMention(event) {
+  return event.user ? `<@${event.user}>` : '@user';
 }
 
 function isDirectUserMessage(event) {

@@ -1,10 +1,14 @@
 # Design Slack Bot
 
-Simple Slack bot that uses the [Shuffle CLI](https://shuffle.dev/design-cli) to create new designs when mentioned in a channel or messaged directly.
+A Slack bot that uses the [Shuffle CLI](https://shuffle.dev/design-cli) to create new designs when mentioned in a channel or messaged directly.
 
 The online version of this tool is available at [AI Design](https://shuffle.dev/ai-design) and [AI Website Redesign](https://shuffle.dev/ai-website-redesign).
 
 All the leading AI design models are supported, including Claude Opus, Gemini Pro, GPT, and Kimi.
+
+## Example
+
+![Design Slack Bot](https://static.shuffle.dev/files/1779001195/slack-bot.png)
 
 ## Setup
 
