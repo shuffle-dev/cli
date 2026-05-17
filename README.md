@@ -4,9 +4,11 @@ Command-line tool for working with [Shuffle Editor](https://shuffle.dev) project
 
 Use it to sign in to Shuffle, list and download projects, sync project files, generate new designs, redesign existing pages, and save generated projects for later use.
 
-## Quick demo
+## Quick demos
 
 [`examples/design-slack-bot`](https://github.com/shuffle-dev/cli/tree/main/examples/design-slack-bot) contains a Slack bot that uses this CLI to create designs from Slack mentions or direct messages. See the example README for Slack app setup instructions.
+
+[`examples/redesign-offer-automation`](https://github.com/shuffle-dev/cli/tree/main/examples/redesign-offer-automation) includes an automation that redesigns prospects’ websites and sends the saved redesign as an offer using Resend.
 
 ## Usage of the Shuffle CLI
 

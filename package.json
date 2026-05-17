@@ -1,6 +1,6 @@
 {
   "name": "@shuffle-dev/cli",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Shuffle Editor CLI tool",
   "repository": {
     "type": "git",
@@ -9,16 +9,14 @@
   "bin": {
     "shuffle": "./bin/shuffle.js"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "keywords": [
     "shuffle",
     "cli",
     "editor"
   ],
   "author": "Shuffle Team",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.4.0",
     "chalk": "^4.1.2",

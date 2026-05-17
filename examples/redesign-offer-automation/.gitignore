@@ -1,0 +1,5 @@
+node_modules/
+.env
+prospects.json
+shuffle-output/
+.DS_Store
