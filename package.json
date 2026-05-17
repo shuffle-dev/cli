@@ -1,7 +1,11 @@
 {
   "name": "@shuffle-dev/cli",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Shuffle Editor CLI tool",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shuffle-dev/cli.git"
+  },
   "bin": {
     "shuffle": "./bin/shuffle.js"
   },

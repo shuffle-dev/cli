@@ -6,7 +6,7 @@ Use it to sign in to Shuffle, list and download projects, sync project files, ge
 
 ## Quick demo
 
-[`examples/design-slack-bot`](./examples/design-slack-bot) contains a Slack bot that uses this CLI to create designs from Slack mentions or direct messages. See the example README for Slack app setup instructions.
+[`examples/design-slack-bot`](https://github.com/shuffle-dev/cli/tree/main/examples/design-slack-bot) contains a Slack bot that uses this CLI to create designs from Slack mentions or direct messages. See the example README for Slack app setup instructions.
 
 ## Usage of the Shuffle CLI
 
