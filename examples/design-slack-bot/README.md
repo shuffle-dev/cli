@@ -8,7 +8,7 @@ All the leading AI design models are supported, including Claude Opus, Gemini Pr
 
 ## Example
 
-![Design Slack Bot](https://static.shuffle.dev/files/1779001195/slack-bot.png)
+![Design Slack Bot](https://static.shuffle.dev/files/1779006626/slack-bot.png)
 
 ## Setup
 
@@ -108,7 +108,7 @@ If you run out of tokens, you can purchase more.
 ## Configuration
 
 - `SLACK_LOG_LEVEL`: Slack SDK logging level. Defaults to `INFO`; use `DEBUG` while diagnosing Socket Mode/event delivery.
-- `SHUFFLE_CLI`: CLI command to run. Defaults to `/private/var/www/shuffle-cli/bin/shuffle.js` when present, otherwise `npx @shuffle-dev/cli`.
+- `SHUFFLE_CLI`: CLI command to run. Defaults to npx @shuffle-dev/cli.
 - `SHUFFLE_MODEL`: model id to use.
 - `SHUFFLE_ALL_MODELS=true`: run all active models instead of one model.
 - `SHUFFLE_SCREENSHOT=false`: skip screenshot generation.
