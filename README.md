@@ -35,6 +35,21 @@ npx @shuffle-dev/cli auth
 
 Your browser opens automatically so you can complete sign-in.
 
+When running the CLI on a remote server, bind the callback on the server and open
+the printed URL from your desktop browser:
+
+```bash
+npx @shuffle-dev/cli auth --no-open
+```
+
+```bash
+npx @shuffle-dev/cli auth --host SERVER_IP --no-open
+```
+
+By default, the CLI listens on `0.0.0.0` and uses the first non-local IPv4
+address it can find for the callback URL. Use `--host` when the server has a
+public IP or DNS name that differs from its network interface address.
+
 Sign out:
 
 ```bash
@@ -215,7 +230,8 @@ shuffle COMMAND
 ### Authentication Issues
 
 - Make sure your browser allows the sign-in page to open.
-- Make sure ports 8080-8085 on localhost are available for the sign-in callback.
+- Make sure ports 8080-8085 are available for the sign-in callback.
+- On a remote server, make sure the callback port is reachable from your desktop or pass `--port PORT` for an allowed port.
 
 ### Connection Issues
 

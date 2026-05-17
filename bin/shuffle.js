@@ -30,7 +30,11 @@ program
 program
     .command('auth')
     .description('Authenticate with Shuffle Editor')
-    .action(AuthCommand.execute);
+    .option('--host <host>', 'Host or IP address used in the browser callback URL')
+    .option('--bind <host>', 'Host or IP address the callback server listens on', '0.0.0.0')
+    .option('--port <port>', 'Port used by the callback server')
+    .option('--no-open', 'Print the authentication URL without opening a browser')
+    .action((options) => AuthCommand.execute(typeof options.opts === 'function' ? options.opts() : options));
 
 // Logout command
 program

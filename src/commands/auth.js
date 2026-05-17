@@ -6,17 +6,21 @@ const crypto = require('crypto');
 const express = require('express');
 const getPort = require('get-port');
 const fetch = require('node-fetch');
+const os = require('os');
 const config = require('../config');
 const api = require('../api');
 
 class AuthCommand {
-    static async execute() {
+    static async execute(options = {}) {
         console.log(chalk.blue('🔐 Shuffle CLI Authentication'));
         console.log();
 
-        // Start local callback server
-        const callbackPort = await getPort({ port: config.getCallbackPorts() });
-        const callbackUrl = `http://localhost:${callbackPort}/callback`;
+        // Start callback server. Bind to all interfaces by default so the
+        // browser can complete auth from another machine when needed.
+        const callbackBindHost = options.bind || process.env.SHUFFLE_CALLBACK_BIND_HOST || '0.0.0.0';
+        const callbackHost = AuthCommand.getCallbackHost(options.host);
+        const callbackPort = await AuthCommand.getCallbackPort(options.port);
+        const callbackUrl = `http://${callbackHost}:${callbackPort}/callback`;
 
         // Generate PKCE parameters
         const codeVerifier = AuthCommand.generateCodeVerifier();
@@ -28,7 +32,7 @@ class AuthCommand {
         let server;
         let authResult = null;
 
-        const authPromise = new Promise((resolve, reject) => {
+        const authPromise = new Promise((resolve) => {
             app.get('/callback', (req, res) => {
                 const { code, state: returnedState, error } = req.query;
 
@@ -84,8 +88,13 @@ class AuthCommand {
                 resolve();
             });
 
-            server = app.listen(callbackPort, () => {
-                console.log(chalk.gray(`\r\nLocal callback server started on port ${callbackPort}`));
+            server = app.listen(callbackPort, callbackBindHost, () => {
+                console.log(chalk.gray(`\r\nCallback server listening on ${callbackBindHost}:${callbackPort}`));
+                console.log(chalk.gray(`Callback URL: ${callbackUrl}`));
+            });
+            server.on('error', (error) => {
+                authResult = { error: `Callback server failed to start: ${error.message}` };
+                resolve();
             });
 
             // Timeout after 5 minutes
@@ -104,15 +113,27 @@ class AuthCommand {
         authUrl.searchParams.set('state', state);
         authUrl.searchParams.set('redirect_uri', callbackUrl);
 
-        console.log(chalk.yellow('Opening browser for authentication...'));
+        if (options.open === false) {
+            console.log(chalk.yellow('Open this URL in your browser to authenticate:'));
+        } else {
+            console.log(chalk.yellow('Opening browser for authentication...'));
+        }
         console.log();
-        console.log(chalk.gray('If the browser doesn\'t open automatically, copy and paste this URL:'));
+        if (options.open !== false) {
+            console.log(chalk.gray('If the browser doesn\'t open automatically, copy and paste this URL:'));
+        }
         console.log(chalk.cyan(authUrl.toString()));
         console.log();
         console.log(chalk.gray('Waiting for authentication... (This will timeout in 5 minutes)'));
 
         // Open browser
-        await open(authUrl.toString());
+        if (options.open !== false) {
+            try {
+                await open(authUrl.toString());
+            } catch (error) {
+                console.log(chalk.yellow('Could not open the browser automatically. Open the URL above in your browser.'));
+            }
+        }
 
         // Wait for authentication callback
         const spinner = ora('Waiting for authentication...').start();
@@ -187,6 +208,41 @@ class AuthCommand {
 
     static generateCodeChallenge(verifier) {
         return crypto.createHash('sha256').update(verifier).digest('base64url');
+    }
+
+    static getCallbackHost(optionHost) {
+        const host = optionHost || process.env.SHUFFLE_CALLBACK_HOST || AuthCommand.getFirstExternalIPv4() || 'localhost';
+        return host.includes(':') && !host.startsWith('[') ? `[${host}]` : host;
+    }
+
+    static getCallbackPort(optionPort) {
+        const configuredPort = optionPort || process.env.SHUFFLE_CALLBACK_PORT;
+
+        if (configuredPort) {
+            const parsedPort = Number.parseInt(configuredPort, 10);
+
+            if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+                throw new Error(`Invalid callback port: ${configuredPort}`);
+            }
+
+            return parsedPort;
+        }
+
+        return getPort({ port: config.getCallbackPorts() });
+    }
+
+    static getFirstExternalIPv4() {
+        const interfaces = os.networkInterfaces();
+
+        for (const addresses of Object.values(interfaces)) {
+            for (const address of addresses || []) {
+                if (address.family === 'IPv4' && !address.internal) {
+                    return address.address;
+                }
+            }
+        }
+
+        return null;
     }
 }
 
