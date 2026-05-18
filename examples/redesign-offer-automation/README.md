@@ -1,10 +1,17 @@
 # Redesign Offer Automation
 
-This tool automates personalized web design outreach using the [Shuffle CLI](https://shuffle.dev/design-cli) redesign engine. The tool generates redesigns of prospect websites, lets you preview them locally before delivery, and sends polished outreach emails with redesign links via Resend.
+This tool automates personalized web design outreach using the [Shuffle CLI](https://shuffle.dev/design-cli) redesign engine. It generates redesigns of prospect websites, lets you preview them locally before delivery, and sends polished outreach emails with redesign links via Resend.
 
 1. `npm run redesigns` generates redesigns for prospect websites and updates the prospect objects with the output file paths in the `redesign` column.
 2. `npm run preview` starts a local preview server for all generated redesigns.
 3. `npm run send-emails` reads the redesign output files, sends them to prospects via Resend, and stores the sent datetime in `email_sent`.
+
+## Overview
+
+| Preview and approve redesigns | Send personalized outreach |
+| --- | --- |
+| The preview tool lets you review and approve generated designs before sending emails. | Prospects receive an email with the generated redesign image and preview links. |
+| ![Redesign offers preview tool](https://static.shuffle.dev/files/1779092708/redesign-offers.jpg) | ![Email sent to a prospect with the redesign image](https://static.shuffle.dev/files/1779091335/email.jpg) |
 
 ## Setup
 
