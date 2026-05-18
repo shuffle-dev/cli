@@ -469,6 +469,17 @@ function execFileAsync(command, args, options) {
       maxBuffer: 1024 * 1024 * 5,
       env: process.env,
     }, (error, stdout, stderr) => {
+      const stdoutError = extractStdoutError(stdout);
+      if (stdoutError) {
+        const extractedError = new Error(stdoutError.message);
+        if (stdoutError.httpCode) {
+          extractedError.httpCode = stdoutError.httpCode;
+        }
+
+        reject(extractedError);
+        return;
+      }
+
       if (error) {
         const details = stderr || stdout || error.message;
         reject(new Error(details.trim()));
@@ -478,6 +489,28 @@ function execFileAsync(command, args, options) {
       resolve({ stdout, stderr });
     });
   });
+}
+
+function extractStdoutError(stdout) {
+  const output = String(stdout || '');
+  const cliError = output.match(/^Error:\s*(.*?)(?:\r?\n(.*?)(?:\r?\n|$)|$)/m);
+  if (cliError) {
+    return {
+      message: [cliError[1], cliError[2]].filter(Boolean).map((line) => line.trim()).join('\n'),
+      httpCode: null,
+    };
+  }
+
+  const httpError = output.match(/^HTTP\s+(\d{3}):\s*(.*?)(?:\r?\n(.*?)(?:\r?\n|$)|$)/m);
+  if (httpError) {
+    const httpCode = Number.parseInt(httpError[1], 10);
+    return {
+      message: [`HTTP ${httpCode}: ${httpError[2]}`, httpError[3]].filter(Boolean).map((line) => line.trim()).join('\n'),
+      httpCode,
+    };
+  }
+
+  return null;
 }
 
 function parseShuffleOutput(output) {
