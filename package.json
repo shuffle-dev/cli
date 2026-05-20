@@ -1,6 +1,6 @@
 {
   "name": "@shuffle-dev/cli",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Shuffle Editor CLI tool",
   "repository": {
     "type": "git",
